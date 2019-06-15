@@ -11,7 +11,6 @@ import (
 const (
 	QueryGetNFTData = "getNFTData"
 	QueryGetNFTList = "getNFTList"
-
 )
 
 // NewQuerier is the module level router for state queries
@@ -32,9 +31,9 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 func queryGetNFTData(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	id := path[0]
 
-	nft := keeper.GetNFT(ctx, id)
+	nft, err := keeper.GetNFT(ctx, id)
 
-	if nft.GetID() == "" {
+	if err != nil {
 		return []byte{}, sdk.ErrUnknownRequest("could not find NFT")
 	}
 

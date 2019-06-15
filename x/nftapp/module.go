@@ -3,6 +3,8 @@ package nftapp
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/x/ibc"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,14 +62,16 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 	keeper     Keeper
+	ibcKeeper  *ibc.Keeper
 	coinKeeper bank.Keeper
 }
 
 // NewAppModule creates a new AppModule Object
-func NewAppModule(k Keeper, bankKeeper bank.Keeper) AppModule {
+func NewAppModule(k Keeper, ibcKeeper *ibc.Keeper, bankKeeper bank.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         k,
+		ibcKeeper:      ibcKeeper,
 		coinKeeper:     bankKeeper,
 	}
 }
@@ -83,7 +87,7 @@ func (am AppModule) Route() string {
 }
 
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+	return NewHandler(am.keeper, am.ibcKeeper)
 }
 func (am AppModule) QuerierRoute() string {
 	return types.ModuleName

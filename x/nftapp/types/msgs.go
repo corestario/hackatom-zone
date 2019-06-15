@@ -71,17 +71,17 @@ func (msg MsgCreateNFT) GetSigners() []sdk.AccAddress {
 
 // MsgTransferTokenToHub defines a TransferTokenToHub message
 type MsgTransferTokenToHub struct {
-	Owner    sdk.AccAddress
-	TokenURI string
-	Price    sdk.Coin
+	Owner   sdk.AccAddress
+	TokenID string
+	Price   sdk.Coin
 }
 
 // NewMsgCreateNFT is a constructor function for MsgCreateNFT
 func NewMsgTransferTokenToHub(owner sdk.AccAddress, tokenURI string, price sdk.Coin) MsgTransferTokenToHub {
 	return MsgTransferTokenToHub{
-		Owner:    owner,
-		TokenURI: tokenURI,
-		Price:    price,
+		Owner:   owner,
+		TokenID: tokenURI,
+		Price:   price,
 	}
 }
 

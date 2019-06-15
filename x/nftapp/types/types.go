@@ -82,7 +82,7 @@ Owner:			%s
 Name:			%s
 Description: 	%s
 Image:			%s
-TokenURI:		%s`,
+TokenID:		%s`,
 		bnft.ID,
 		bnft.Owner,
 		bnft.Name,

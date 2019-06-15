@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/x/ibc"
+
+	ibcKeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,6 +60,7 @@ type NFTApp struct {
 	keyParams        *sdk.KVStoreKey
 	tkeyParams       *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
+	keyIBC           *sdk.KVStoreKey
 
 	// Keepers
 	accountKeeper       auth.AccountKeeper
@@ -66,6 +71,7 @@ type NFTApp struct {
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	paramsKeeper        params.Keeper
 	nftKeeper           nftapp.Keeper
+	ibcKeeper           ibc.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -94,6 +100,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 		keySlashing:      sdk.NewKVStoreKey(slashing.StoreKey),
+		keyIBC:           sdk.NewKVStoreKey("ibc"),
 	}
 
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams, params.DefaultCodespace)
@@ -158,23 +165,24 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 			app.slashingKeeper.Hooks()),
 	)
 
-	// The NameserviceKeeper is the Keeper from the module for this tutorial
-	// It handles interactions with the namestore
 	app.nftKeeper = nftapp.NewKeeper(
 		app.bankKeeper,
 		app.keyNFT,
 		app.cdc,
 	)
 
+	app.ibcKeeper = ibcKeeper.NewKeeper(cdc, app.keyIBC)
+
 	app.mm = module.NewManager(
 		genaccounts.NewAppModule(app.accountKeeper),
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper, app.feeCollectionKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		nftapp.NewAppModule(app.nftKeeper, app.bankKeeper),
+		nftapp.NewAppModule(app.nftKeeper, &app.ibcKeeper, app.bankKeeper),
 		distr.NewAppModule(app.distrKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
+		ibc.NewAppModule(app.ibcKeeper),
 	)
 
 	app.mm.SetOrderBeginBlockers(distr.ModuleName, slashing.ModuleName)
@@ -190,6 +198,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		slashing.ModuleName,
 		types.ModuleName,
 		genutil.ModuleName,
+		"ibc",
 	)
 
 	// register all module routes and module queriers
@@ -220,6 +229,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		app.keyNFT,
 		app.keyParams,
 		app.tkeyParams,
+		app.keyIBC,
 	)
 
 	err := app.LoadLatestVersion(app.keyMain)
@@ -242,6 +252,7 @@ func init() {
 		staking.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		slashing.AppModuleBasic{},
+		ibc.AppModuleBasic{},
 	)
 }
 

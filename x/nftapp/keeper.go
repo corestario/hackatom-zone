@@ -37,8 +37,8 @@ func (k Keeper) CreateNFT(ctx sdk.Context, nft types.BaseNFT) {
 }
 
 func (k Keeper) DeleteNFT(ctx sdk.Context, sender sdk.AccAddress, nftID string) error {
-	nft := k.GetNFT(ctx, nftID)
-	if len(nft.ID) == 0 {
+	nft, err := k.GetNFT(ctx, nftID)
+	if err != nil {
 		return nil
 	}
 
@@ -53,16 +53,16 @@ func (k Keeper) DeleteNFT(ctx sdk.Context, sender sdk.AccAddress, nftID string) 
 }
 
 // GetNFT Gets the entire NFT metadata struct by id
-func (k Keeper) GetNFT(ctx sdk.Context, id string) types.BaseNFT {
+func (k Keeper) GetNFT(ctx sdk.Context, id string) (*types.BaseNFT, error) {
 	store := ctx.KVStore(k.storeKey)
 
 	if !store.Has([]byte(id)) {
-		return types.BaseNFT{}
+		return nil, errors.New("token not found")
 	}
 	encodedNFT := store.Get([]byte(id))
 	var nft types.BaseNFT
 	k.cdc.MustUnmarshalBinaryBare(encodedNFT, &nft)
-	return nft
+	return &nft, nil
 }
 
 // GetNFTList gets list of NFT tokens by owner's address

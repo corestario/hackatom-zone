@@ -11,7 +11,7 @@ func NewGenesisState(nfts []types.NFT) types.GenesisState {
 }
 
 func ValidateGenesis(data types.GenesisState) error {
-	for _, _ = range data.NFTS {
+	for range data.NFTS {
 		// TODO: validates
 	}
 	return nil
@@ -35,9 +35,12 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	iterator := k.GetNFTIterator(ctx)
 	for ; iterator.Valid(); iterator.Next() {
 		id := string(iterator.Key())
-		var nft types.BaseNFT
-		nft = k.GetNFT(ctx, id)
-		nfts.Add(types.NewNFTs(nft))
+		var nft *types.BaseNFT
+		nft, err := k.GetNFT(ctx, id)
+		if err != nil {
+			continue
+		}
+		nfts.Add(types.NewNFTs(*nft))
 	}
 	return types.GenesisState{NFTS: nfts}
 }
