@@ -1,4 +1,4 @@
-package nftapp
+package types
 
 import (
 	"encoding/json"

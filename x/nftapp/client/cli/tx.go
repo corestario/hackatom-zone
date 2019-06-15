@@ -3,15 +3,13 @@ package cli
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/dgamingfoundation/nftapp/x/nftapp"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
+	"github.com/spf13/cobra"
 )
 
 func GetCmdCreateNFT(cdc *codec.Codec) *cobra.Command {
@@ -28,7 +26,7 @@ func GetCmdCreateNFT(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := nftapp.NewMsgCreateNFT(cliCtx.GetFromAddress(), args[0], args[1], args[2], args[3])
+			msg := types.NewMsgCreateNFT(cliCtx.GetFromAddress(), args[0], args[1], args[2], args[3])
 			err := msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -61,7 +59,7 @@ func GetCmdTransferTokenToHub(cdc *codec.Codec) *cobra.Command {
 			}
 
 			tokenURI := args[0]
-			msg := nftapp.NewMsgTransferTokenToHub(cliCtx.GetFromAddress(), tokenURI, price)
+			msg := types.NewMsgTransferTokenToHub(cliCtx.GetFromAddress(), tokenURI, price)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

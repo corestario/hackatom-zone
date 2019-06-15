@@ -2,28 +2,26 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/dgamingfoundation/nftapp/x/nftapp"
 	"os"
 
-	"github.com/tendermint/tendermint/libs/log"
-
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-
 	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
-
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dgamingfoundation/nftapp/x/nftapp"
+	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -36,12 +34,14 @@ var (
 	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
 	DefaultNodeHome = os.ExpandEnv("$HOME/.nftd")
 
-	// ModuleBasicManager is in charge of setting up basic module elemnets
-	ModuleBasics sdk.ModuleBasicManager
+	// The ModuleBasicManager is in charge of setting up basic,
+	// non-dependant module elements, such as codec registration
+	// and genesis verification.
+	ModuleBasics module.BasicManager
 )
 
 type NFTApp struct {
-    *bam.BaseApp
+	*bam.BaseApp
 	cdc *codec.Codec
 
 	// Keys to access the substores
@@ -67,17 +67,17 @@ type NFTApp struct {
 	paramsKeeper        params.Keeper
 	nftKeeper           nftapp.Keeper
 
-	// Module Manager
-	mm *sdk.ModuleManager
+	// the module manager
+	mm *module.Manager
 }
 
 func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 
-    // First define the top level codec that will be shared by the different modules. Note: Codec will be explained later
-    cdc := MakeCodec()
+	// First define the top level codec that will be shared by the different modules. Note: Codec will be explained later
+	cdc := MakeCodec()
 
-    // BaseApp handles interactions with Tendermint through the ABCI protocol
-    bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc))
+	// BaseApp handles interactions with Tendermint through the ABCI protocol
+	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc))
 
 	var app = &NFTApp{
 		BaseApp: bApp,
@@ -99,7 +99,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams, params.DefaultCodespace)
 	// Set specific supspaces
 	authSubspace := app.paramsKeeper.Subspace(auth.DefaultParamspace)
-	bankSupspace := app.paramsKeeper.Subspace(bank.DefaultParamspace)
+	bankSubspace := app.paramsKeeper.Subspace(bank.DefaultParamspace)
 	stakingSubspace := app.paramsKeeper.Subspace(staking.DefaultParamspace)
 	distrSubspace := app.paramsKeeper.Subspace(distr.DefaultParamspace)
 	slashingSubspace := app.paramsKeeper.Subspace(slashing.DefaultParamspace)
@@ -115,7 +115,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 	// The BankKeeper allows you perform sdk.Coins interactions
 	app.bankKeeper = bank.NewBaseKeeper(
 		app.accountKeeper,
-		bankSupspace,
+		bankSubspace,
 		bank.DefaultCodespace,
 	)
 
@@ -160,13 +160,13 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 
 	// The NameserviceKeeper is the Keeper from the module for this tutorial
 	// It handles interactions with the namestore
-	app.nftKeeper= nftapp.NewKeeper(
+	app.nftKeeper = nftapp.NewKeeper(
 		app.bankKeeper,
 		app.keyNFT,
 		app.cdc,
 	)
 
-	app.mm = sdk.NewModuleManager(
+	app.mm = module.NewManager(
 		genaccounts.NewAppModule(app.accountKeeper),
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper, app.feeCollectionKeeper),
@@ -188,7 +188,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		auth.ModuleName,
 		bank.ModuleName,
 		slashing.ModuleName,
-		nftapp.ModuleName,
+		types.ModuleName,
 		genutil.ModuleName,
 	)
 
@@ -232,7 +232,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 
 // maintains independent module functionality
 func init() {
-	ModuleBasics = sdk.NewModuleBasicManager(
+	ModuleBasics = module.NewBasicManager(
 		genaccounts.AppModuleBasic{},
 		genutil.AppModuleBasic{},
 		auth.AppModuleBasic{},
@@ -276,7 +276,6 @@ func (app *NFTApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 func (app *NFTApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
 }
-
 
 func (app *NFTApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string,
 ) (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {

@@ -1,4 +1,4 @@
-package nftapp
+package types
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const ModuleName = "nftapp"
 const RouterKey = ModuleName
 
 // --------------------------------------------------------------------------

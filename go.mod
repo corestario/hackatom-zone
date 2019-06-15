@@ -3,8 +3,10 @@ module github.com/dgamingfoundation/nftapp
 go 1.12
 
 require (
-	github.com/cosmos/cosmos-sdk v0.28.2-0.20190604125914-75de63ce3166
+	github.com/cosmos/cosmos-sdk v0.28.2-0.20190615115749-95b946b4559a
 	github.com/gorilla/mux v1.7.0
+	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/olekukonko/tablewriter v0.0.1 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v0.0.3

@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
 	"github.com/pkg/errors"
 )
 
@@ -25,7 +26,7 @@ func NewKeeper(coinKeeper bank.Keeper, storeKey sdk.StoreKey, cdc *codec.Codec) 
 }
 
 // CreateNFT creates NFT in KVStore
-func (k Keeper) CreateNFT(ctx sdk.Context, nft BaseNFT) {
+func (k Keeper) CreateNFT(ctx sdk.Context, nft types.BaseNFT) {
 	store := ctx.KVStore(k.storeKey)
 
 	if store.Has([]byte(nft.GetID())) {
@@ -52,30 +53,30 @@ func (k Keeper) DeleteNFT(ctx sdk.Context, sender sdk.AccAddress, nftID string) 
 }
 
 // GetNFT Gets the entire NFT metadata struct by id
-func (k Keeper) GetNFT(ctx sdk.Context, id string) BaseNFT {
+func (k Keeper) GetNFT(ctx sdk.Context, id string) types.BaseNFT {
 	store := ctx.KVStore(k.storeKey)
 
 	if !store.Has([]byte(id)) {
-		return BaseNFT{}
+		return types.BaseNFT{}
 	}
 	encodedNFT := store.Get([]byte(id))
-	var nft BaseNFT
+	var nft types.BaseNFT
 	k.cdc.MustUnmarshalBinaryBare(encodedNFT, &nft)
 	return nft
 }
 
 // GetNFTList gets list of NFT tokens by owner's address
-func (k Keeper) GetNFTList(ctx sdk.Context, owner sdk.AccAddress) NFTs {
+func (k Keeper) GetNFTList(ctx sdk.Context, owner sdk.AccAddress) types.NFTs {
 	var (
-		decodedNFT BaseNFT
+		decodedNFT types.BaseNFT
 	)
-	nfts := NewNFTs()
+	nfts := types.NewNFTs()
 	iterator := k.GetNFTIterator(ctx)
 	for ; iterator.Valid(); iterator.Next() {
 		encodedNFT := iterator.Value()
 		k.cdc.MustUnmarshalBinaryBare(encodedNFT, &decodedNFT)
 		if decodedNFT.GetOwner().Equals(owner) {
-			nfts.Add(NewNFTs(decodedNFT))
+			nfts.Add(types.NewNFTs(decodedNFT))
 		}
 	}
 	return nfts

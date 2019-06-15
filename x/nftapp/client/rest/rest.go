@@ -7,11 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/dgamingfoundation/nftapp/x/nftapp"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
 	"github.com/gorilla/mux"
 )
 
@@ -20,40 +19,40 @@ const (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, name string) {
-	r.HandleFunc(fmt.Sprintf("/%s/nft", name), createNFTHandler(cdc, cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/%s/nft/transfer", name), transferNFTHandler(cdc, cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/%s/nft/{%s}", name, restName), getNFTHandler(cdc, cliCtx, name)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/nft/list/{%s}/", name, restName), getNFTListHandler(cdc, cliCtx, name)).Methods("GET")
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
+	r.HandleFunc("/nftapp/nft", createNFTHandler(cliCtx)).Methods("POST")
+	r.HandleFunc("/nftapp/nft/transfer", transferNFTHandler(cliCtx)).Methods("POST")
+	r.HandleFunc("/nftapp/nft/{%s}", getNFTHandler(cliCtx)).Methods("GET")
+	r.HandleFunc("/nftapp/nft/list/{%s}/", getNFTListHandler(cliCtx)).Methods("GET")
 }
 
-func getNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func getNFTHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		paramType := vars[restName]
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/getNFTData/%s", storeName, paramType), nil)
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/nftapp/getNFTData/%s", paramType), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
-func getNFTListHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func getNFTListHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		paramType := vars[restName]
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/getNFTList/%s", storeName, paramType), nil)
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/nftapp/getNFTList/%s", paramType), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
 
-		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 
@@ -70,11 +69,11 @@ type CreateNFTReq struct {
 	TokenURI    string `json:"token_uri"`
 }
 
-func createNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func createNFTHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateNFTReq
 
-		if !rest.ReadRESTReq(w, r, cdc, &req) {
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
 		}
@@ -91,14 +90,14 @@ func createNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 		}
 
 		// create the message
-		msg := nftapp.NewMsgCreateNFT(addr, req.TokenName, req.Description, req.Image, req.TokenURI)
+		msg := types.NewMsgCreateNFT(addr, req.TokenName, req.Description, req.Image, req.TokenURI)
 		err = msg.ValidateBasic()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		broadcastTransaction(cliCtx, w, cdc, baseReq, msg, req.Name, req.Password)
+		broadcastTransaction(cliCtx, w, baseReq, msg, req.Name, req.Password)
 	}
 }
 
@@ -113,11 +112,11 @@ type TransferToHubReq struct {
 	Price   string `json:"price"`
 }
 
-func transferNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func transferNFTHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req TransferToHubReq
 
-		if !rest.ReadRESTReq(w, r, cdc, &req) {
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
 		}
@@ -140,21 +139,20 @@ func transferNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		}
 
 		// create the message
-		msg := nftapp.NewMsgTransferTokenToHub(addr, req.TokenID, price)
+		msg := types.NewMsgTransferTokenToHub(addr, req.TokenID, price)
 		err = msg.ValidateBasic()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		broadcastTransaction(cliCtx, w, cdc, baseReq, msg, req.Name, req.Password)
+		broadcastTransaction(cliCtx, w, baseReq, msg, req.Name, req.Password)
 	}
 }
 
 func broadcastTransaction(
 	cliCtx context.CLIContext,
 	w http.ResponseWriter,
-	cdc *codec.Codec,
 	bq rest.BaseReq,
 	msg sdk.Msg,
 	name,
@@ -171,7 +169,7 @@ func broadcastTransaction(
 	}
 
 	txBldr := authtxb.NewTxBuilder(
-		utils.GetTxEncoder(cdc), bq.AccountNumber, bq.Sequence, gas, gasAdj,
+		utils.GetTxEncoder(cliCtx.Codec), bq.AccountNumber, bq.Sequence, gas, gasAdj,
 		bq.Simulate, bq.ChainID, bq.Memo, bq.Fees, bq.GasPrices,
 	)
 
@@ -187,5 +185,5 @@ func broadcastTransaction(
 		return
 	}
 
-	rest.PostProcessResponse(w, cdc, resp, true)
+	rest.PostProcessResponse(w, cliCtx, resp)
 }
