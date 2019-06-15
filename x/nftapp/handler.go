@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
-	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
+	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	uuid "github.com/satori/go.uuid"

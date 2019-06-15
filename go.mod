@@ -1,4 +1,4 @@
-module github.com/dgamingfoundation/nftapp
+module github.com/dgamingfoundation/hackatom-zone
 
 go 1.12
 

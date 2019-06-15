@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
+	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 	"github.com/spf13/cobra"
 )
 

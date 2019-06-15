@@ -3,7 +3,7 @@ package nftapp
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
-	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
+	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 )
 
 // RegisterCodec registers concrete types on wire codec

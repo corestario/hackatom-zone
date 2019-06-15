@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
+	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 	"github.com/spf13/cobra"
 )
 

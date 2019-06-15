@@ -10,7 +10,7 @@ import (
 	genaccscli "github.com/cosmos/cosmos-sdk/x/auth/genaccounts/client/cli"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	app "github.com/dgamingfoundation/nftapp"
+	app "github.com/dgamingfoundation/hackatom-zone"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/cli"

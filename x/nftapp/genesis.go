@@ -2,7 +2,7 @@ package nftapp
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dgamingfoundation/nftapp/x/nftapp/types"
+	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
