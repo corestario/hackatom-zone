@@ -2,6 +2,8 @@ package nftapp
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
+	"sync"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
@@ -34,6 +36,8 @@ func handleMsgCreateNFT(ctx sdk.Context, keeper Keeper, msg types.MsgCreateNFT) 
 	return sdk.Result{}
 }
 
+var once sync.Once
+
 // Handle a message to create nft
 func handleMsgTransferTokenToHub(
 	ctx sdk.Context,
@@ -45,6 +49,34 @@ func handleMsgTransferTokenToHub(
 	if err != nil {
 		return sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
 	}
+
+	var result sdk.Result
+	once.Do(func() {
+		err = ibcKeeper.CreateClient(ctx, types.ClientID, tendermint.ConsensusState{
+			ChainID: "NFTChain",
+		})
+		if err != nil {
+			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
+			return
+		}
+
+		err = ibcKeeper.OpenConnection(ctx, types.ConnectionID, types.CounterpartyID, types.ClientID, types.CounterpartyClientID)
+		if err != nil {
+			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
+			return
+		}
+
+		err = ibcKeeper.OpenChannel(ctx, "zoneA", types.ConnectionID, types.ChannelID, types.CounterpartyID, "zoneB")
+		if err != nil {
+			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
+			return
+		}
+	})
+
+	if !result.IsOK() {
+		return result
+	}
+
 	packet := types.NewSellTokenPacket(token, msg.Price)
 	if err := ibcKeeper.Send(ctx, types.ConnectionID, types.CounterpartyID, packet); err != nil {
 		return sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
