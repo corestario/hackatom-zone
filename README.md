@@ -125,7 +125,7 @@ curl -s -XPOST http://localhost:1317/nftapp/nft/transfer --data-binary '{"base_r
 
 * Create NFT with a name, description, image and token_uri for Jack's account
 ```bash
-nftcli tx nftapp createNFT NAME DESCRIPTION IMAGE TOKEN_URI --from jack
+nftcli tx nftapp createNFT NAME DESCRIPTION IMAGE TOKEN_URI --from validator1
 ```
 ##### Output
 ```bash
@@ -163,7 +163,7 @@ Password to sign with 'jack':
 * Get a list of NFTs for Jack's account
 
 ```bash
-nftcli query nftapp getNFTList $(nftcli keys show jack -a)
+nftcli query nftapp getNFTList $(nftcli keys show validator1 -a)
 ```
 ##### Output
 ```json
