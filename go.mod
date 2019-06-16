@@ -3,7 +3,7 @@ module github.com/dgamingfoundation/hackatom-zone
 go 1.12
 
 require (
-	github.com/cosmos/cosmos-sdk v0.28.2-0.20190615115749-95b946b4559a
+	github.com/cosmos/cosmos-sdk v0.28.2-0.20190616123619-7efb69cb3708
 	github.com/gorilla/mux v1.7.0
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/olekukonko/tablewriter v0.0.1 // indirect

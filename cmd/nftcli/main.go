@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	ibccli "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	app "github.com/dgamingfoundation/hackatom-zone"
 )
 
@@ -27,6 +28,11 @@ const (
 )
 
 func main() {
+	viper.Set(ibccli.FlagConnectionID, "connection_id")
+	viper.Set(ibccli.FlagClientID, "client_id")
+	viper.Set(ibccli.FlagCounterpartyID, "counterparty_id")
+	viper.Set(ibccli.FlagCounterpartyClientID, "counterparty_client_id")
+
 	cobra.EnableCommandSorting = false
 
 	cdc := app.MakeCodec()

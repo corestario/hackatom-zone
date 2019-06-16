@@ -1,11 +1,10 @@
 package types
 
 const (
-	ChannelID         = "market_connection_channel"
-	ConnectionID         = "market_connection"
-	CounterpartyID       = "hub"
-	CounterpartyClientID = "me"
-	ClientID = "not-me"
+	ConnectionID   = "connection_id"
+	CounterpartyID = "counterparty_id"
 
-
+	ChannelID         = "channel-id"
+	CounterpartyClientID = "counterparty-client-id"
+	ClientID = "client-id"
 )
