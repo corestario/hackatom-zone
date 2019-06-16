@@ -22,14 +22,14 @@ const (
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/nftapp/nft", createNFTHandler(cliCtx)).Methods("POST")
 	r.HandleFunc("/nftapp/nft/transfer", transferNFTHandler(cliCtx)).Methods("POST")
-	r.HandleFunc("/nftapp/nft/{%s}", getNFTHandler(cliCtx)).Methods("GET")
-	r.HandleFunc("/nftapp/nft/list/{%s}/", getNFTListHandler(cliCtx)).Methods("GET")
+	r.HandleFunc("/nftapp/nft/{token_id}", getNFTHandler(cliCtx)).Methods("GET")
+	r.HandleFunc("/nftapp/nft/list/{user_id}/", getNFTListHandler(cliCtx)).Methods("GET")
 }
 
 func getNFTHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		paramType := vars[restName]
+		paramType := vars["token_id"]
 
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/nftapp/getNFTData/%s", paramType), nil)
 		if err != nil {
@@ -44,7 +44,7 @@ func getNFTHandler(cliCtx context.CLIContext) http.HandlerFunc {
 func getNFTListHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		paramType := vars[restName]
+		paramType := vars["user_id"]
 
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/nftapp/getNFTList/%s", paramType), nil)
 		if err != nil {
