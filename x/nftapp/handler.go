@@ -89,7 +89,7 @@ func handleMsgTransferTokenToHub(
 	}
 
 	packet := types.NewSellTokenPacket(token, msg.Price)
-	if err := ibcKeeper.Send(ctx, types.ConnectionID, types.CounterpartyID, packet); err != nil {
+	if err := ibcKeeper.Send(ctx, types.ConnectionID, types.ChannelID, packet); err != nil {
 		fmt.Println(">>>", err)
 		return sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
 	}
