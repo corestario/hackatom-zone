@@ -7,4 +7,7 @@ const (
 	ChannelID         = "channel-id"
 	CounterpartyClientID = "counterparty-client-id"
 	ClientID = "client-id"
+
+	ZoneModule = "nftapp"
+	HubModule = "hh"
 )

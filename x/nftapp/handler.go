@@ -66,7 +66,7 @@ func handleMsgTransferTokenToHub(
 			return
 		}
 
-		err = ibcKeeper.OpenChannel(ctx, "zoneA", types.ConnectionID, types.ChannelID, types.CounterpartyID, "zoneB")
+		err = ibcKeeper.OpenChannel(ctx, types.ZoneModule, types.ConnectionID, types.ChannelID, types.CounterpartyID, types.HubModule)
 		if err != nil {
 			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
 			return
