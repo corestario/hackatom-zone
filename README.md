@@ -201,4 +201,4 @@ nftcli query nftapp getNFTData 443a901b-5738-475c-91a2-11cc24af9e01
 ```
 
 
-
+nftcli tx nftapp transfer 7cd2ea3b-1283-4b30-b028-c840803e39d7 10token --from validator1
