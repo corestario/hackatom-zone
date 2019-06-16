@@ -22,7 +22,10 @@ actor barely wait patrol moral amateur hole clerk misery truly salad wonder arte
 
 nftd add-genesis-account $(hhcli keys show validator1 -a) 1000token,100000000stake
 nftd add-genesis-account $(hhcli keys show alice -a) 1000token
-cp
+
+cp ./config.toml $HOME/.nftd/config/config.toml
+cp ./config.toml $HOME/.nftcli/config/config.toml
+
 echo "Configuring..."
 nftcli config chain-id NFTChain
 nftcli config output json
