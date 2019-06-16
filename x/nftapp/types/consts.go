@@ -1,7 +1,6 @@
 package types
 
 const (
-	ConnectionID         = "market_connection"
-	CounterpartyID       = "hub"
-	CounterpartyClientID = "me"
+	ConnectionID   = "connection_id"
+	CounterpartyID = "counterparty_id"
 )
