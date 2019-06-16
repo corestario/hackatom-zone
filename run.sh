@@ -28,9 +28,6 @@ nftcli config chain-id NFTChain
 nftcli config output json
 nftcli config indent true
 nftcli config trust-node true
-nftcli config connection-id market_connection
-nftcli config counterparty-id hub
-nftcli config counterparty-client-id me
 
 nftd gentx --name validator1
 nftd collect-gentxs

@@ -4,6 +4,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
@@ -28,10 +30,10 @@ const (
 )
 
 func main() {
-	viper.Set(ibccli.FlagConnectionID, "connection_id")
-	viper.Set(ibccli.FlagClientID, "client_id")
-	viper.Set(ibccli.FlagCounterpartyID, "counterparty_id")
-	viper.Set(ibccli.FlagCounterpartyClientID, "counterparty_client_id")
+	viper.Set(ibccli.FlagConnectionID, types.ConnectionID)
+	viper.Set(ibccli.FlagClientID, types.ClientID)
+	viper.Set(ibccli.FlagCounterpartyID, types.CounterpartyID)
+	viper.Set(ibccli.FlagCounterpartyClientID, types.CounterpartyClientID)
 
 	cobra.EnableCommandSorting = false
 

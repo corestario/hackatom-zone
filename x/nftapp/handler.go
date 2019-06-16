@@ -71,6 +71,17 @@ func handleMsgTransferTokenToHub(
 			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
 			return
 		}
+
+		_, err := ibcKeeper.QueryConnection(ctx, types.ConnectionID)
+		if err != nil {
+			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
+			return
+		}
+
+		obj := ibcKeeper.Channel.Object(types.ConnectionID, types.ChannelID)
+		fmt.Println("Is Empty:", obj.Packets.IsEmpty(ctx))
+		fmt.Println("Seqsend", obj.Seqsend.Get(ctx))
+
 	})
 
 	if !result.IsOK() {
@@ -78,10 +89,14 @@ func handleMsgTransferTokenToHub(
 	}
 
 	packet := types.NewSellTokenPacket(token, msg.Price)
-	if err := ibcKeeper.Send(ctx, types.ConnectionID, types.CounterpartyID, packet); err != nil {
+	if err := ibcKeeper.Send(ctx, types.ConnectionID, types.ChannelID, packet); err != nil {
 		fmt.Println(">>>", err)
 		return sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
 	}
+
+	obj := ibcKeeper.Channel.Object(types.ConnectionID, types.ChannelID)
+	fmt.Println("Is Empty:", obj.Packets.IsEmpty(ctx))
+	fmt.Println("Seqsend", obj.Seqsend.Get(ctx))
 
 	if err := keeper.DeleteNFT(ctx, msg.Owner, msg.TokenID); err != nil {
 		return sdk.ErrUnauthorized(fmt.Sprintf("failed to delete token: %v", err.Error())).Result()

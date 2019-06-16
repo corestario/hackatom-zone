@@ -4,11 +4,15 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	genaccscli "github.com/cosmos/cosmos-sdk/x/auth/genaccounts/client/cli"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	ibccli "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	app "github.com/dgamingfoundation/hackatom-zone"
 	"github.com/spf13/cobra"
@@ -20,6 +24,11 @@ import (
 )
 
 func main() {
+	viper.Set(ibccli.FlagConnectionID, types.ConnectionID)
+	viper.Set(ibccli.FlagClientID, types.ClientID)
+	viper.Set(ibccli.FlagCounterpartyID, types.CounterpartyID)
+	viper.Set(ibccli.FlagCounterpartyClientID, types.CounterpartyClientID)
+
 	cobra.EnableCommandSorting = false
 
 	cdc := app.MakeCodec()
