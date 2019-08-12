@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,7 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	ibccli "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	ibccli "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/cli"
 	app "github.com/dgamingfoundation/hackatom-zone"
 )
 
@@ -96,8 +95,8 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 		client.LineBreak,
 		rpc.ValidatorCommand(cdc),
 		rpc.BlockCommand(),
-		tx.SearchTxCmd(cdc),
-		tx.QueryTxCmd(cdc),
+		//tx.SearchTxCmd(cdc),
+		//tx.QueryTxCmd(cdc),
 		client.LineBreak,
 	)
 
@@ -119,8 +118,8 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 		authcmd.GetSignCommand(cdc),
 		authcmd.GetMultiSignCommand(cdc),
 		client.LineBreak,
-		tx.GetBroadcastCommand(cdc),
-		tx.GetEncodeCommand(cdc),
+		//tx.GetBroadcastCommand(cdc),
+		//tx.GetEncodeCommand(cdc),
 		client.LineBreak,
 	)
 

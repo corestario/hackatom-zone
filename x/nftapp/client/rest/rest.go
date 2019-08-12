@@ -6,9 +6,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 	"github.com/gorilla/mux"

@@ -2,6 +2,7 @@ package nftapp
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	xnft "github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -35,7 +36,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	iterator := k.GetNFTIterator(ctx)
 	for ; iterator.Valid(); iterator.Next() {
 		id := string(iterator.Key())
-		var nft *types.BaseNFT
+		var nft *xnft.BaseNFT
 		nft, err := k.GetNFT(ctx, id)
 		if err != nil {
 			continue

@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	xnft "github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 	"github.com/pkg/errors"
 )
@@ -26,7 +27,7 @@ func NewKeeper(coinKeeper bank.Keeper, storeKey sdk.StoreKey, cdc *codec.Codec) 
 }
 
 // CreateNFT creates NFT in KVStore
-func (k Keeper) CreateNFT(ctx sdk.Context, nft types.BaseNFT) {
+func (k Keeper) CreateNFT(ctx sdk.Context, nft xnft.BaseNFT) {
 	store := ctx.KVStore(k.storeKey)
 
 	if store.Has([]byte(nft.GetID())) {
@@ -53,22 +54,22 @@ func (k Keeper) DeleteNFT(ctx sdk.Context, sender sdk.AccAddress, nftID string) 
 }
 
 // GetNFT Gets the entire NFT metadata struct by id
-func (k Keeper) GetNFT(ctx sdk.Context, id string) (*types.BaseNFT, error) {
+func (k Keeper) GetNFT(ctx sdk.Context, id string) (*xnft.BaseNFT, error) {
 	store := ctx.KVStore(k.storeKey)
 
 	if !store.Has([]byte(id)) {
 		return nil, errors.New("token not found")
 	}
 	encodedNFT := store.Get([]byte(id))
-	var nft types.BaseNFT
+	var nft xnft.BaseNFT
 	k.cdc.MustUnmarshalBinaryBare(encodedNFT, &nft)
 	return &nft, nil
 }
 
 // GetNFTList gets list of NFT tokens by owner's address
-func (k Keeper) GetNFTList(ctx sdk.Context, owner sdk.AccAddress) types.NFTs {
+func (k Keeper) GetNFTList(ctx sdk.Context, owner sdk.AccAddress) []xnft.BaseNFT {
 	var (
-		decodedNFT types.BaseNFT
+		decodedNFT xnft.BaseNFT
 	)
 	nfts := types.NewNFTs()
 	iterator := k.GetNFTIterator(ctx)

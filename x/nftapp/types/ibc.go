@@ -6,19 +6,24 @@ import (
 	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	xnft "github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 type SellTokenPacket struct {
-	Token *BaseNFT `json:"token"`
-	Price sdk.Coin `json:"price"`
+	Token *xnft.BaseNFT `json:"token"`
+	Price sdk.Coin      `json:"price"`
 }
 
-func NewSellTokenPacket(token *BaseNFT, price sdk.Coin) *SellTokenPacket {
+func NewSellTokenPacket(token *xnft.BaseNFT, price sdk.Coin) *SellTokenPacket {
 	return &SellTokenPacket{Token: token, Price: price}
 }
 
 func (m *SellTokenPacket) Timeout() uint64 {
 	return math.MaxUint64
+}
+
+func (m *SellTokenPacket) Route() string {
+	return "sell_token_packet"
 }
 
 func (m *SellTokenPacket) Commit() []byte {

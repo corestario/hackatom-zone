@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 	"github.com/spf13/cobra"
@@ -18,21 +18,15 @@ func GetCmdCreateNFT(cdc *codec.Codec) *cobra.Command {
 		Short: "Creates NFT",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-			if err := cliCtx.EnsureAccountExists(); err != nil {
-				return err
-			}
 
 			msg := types.NewMsgCreateNFT(cliCtx.GetFromAddress(), args[0], args[1], args[2], args[3])
 			err := msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
-
-			cliCtx.PrintResponse = true
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -45,13 +39,9 @@ func GetCmdTransferTokenToHub(cdc *codec.Codec) *cobra.Command {
 		Short: "Transfers token to hub's marketplace",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-			if err := cliCtx.EnsureAccountExists(); err != nil {
-				return err
-			}
 
 			price, err := sdk.ParseCoin(args[1])
 			if err != nil {
@@ -63,8 +53,6 @@ func GetCmdTransferTokenToHub(cdc *codec.Codec) *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-
-			cliCtx.PrintResponse = true
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},

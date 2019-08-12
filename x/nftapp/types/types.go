@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	xnft "github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // NFT non fungible token interface
@@ -14,16 +16,11 @@ type NFT interface {
 	GetID() string
 	GetOwner() sdk.AccAddress
 	SetOwner(address sdk.AccAddress) NFT
-	GetName() string
-	GetDescription() string
-	GetImage() string
 	GetTokenURI() string
 
 	EditMetadata(name, description, image, tokenURI string) NFT
 	String() string
 }
-
-var _ NFT = (*BaseNFT)(nil)
 
 // BaseNFT non fungible token definition
 type BaseNFT struct {
@@ -36,44 +33,13 @@ type BaseNFT struct {
 }
 
 // NewBaseNFT creates a new NFT instance
-func NewBaseNFT(ID string, owner sdk.AccAddress, name, description, image, tokenURI string,
-) BaseNFT {
-	return BaseNFT{
-		ID:          ID,
-		Owner:       owner,
-		Name:        strings.TrimSpace(name),
-		Description: strings.TrimSpace(description),
-		Image:       strings.TrimSpace(image),
-		TokenURI:    strings.TrimSpace(tokenURI),
-	}
-}
-
-// GetID returns the ID of the token
-func (bnft BaseNFT) GetID() string { return bnft.ID }
-
-// GetOwner returns the account address that owns the NFT
-func (bnft BaseNFT) GetOwner() sdk.AccAddress { return bnft.Owner }
-
-// SetOwner updates the owner address of the NFT
-func (bnft BaseNFT) SetOwner(address sdk.AccAddress) NFT {
-	return NFT(NewBaseNFT(bnft.ID, address, bnft.TokenURI, bnft.Description, bnft.Image, bnft.Name))
-}
-
-// GetName returns the name of the token
-func (bnft BaseNFT) GetName() string { return bnft.Name }
-
-// GetDescription returns the unique description of the NFT
-func (bnft BaseNFT) GetDescription() string { return bnft.Description }
-
-// GetImage returns the image path of the NFT
-func (bnft BaseNFT) GetImage() string { return bnft.Image }
-
-// GetTokenURI returns the path to optional extra properties
-func (bnft BaseNFT) GetTokenURI() string { return bnft.TokenURI }
-
-// EditMetadata edits metadata of an nft
-func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) NFT {
-	return NFT(NewBaseNFT(bnft.ID, bnft.Owner, tokenURI, description, image, name))
+func NewBaseNFT(ID string, owner sdk.AccAddress, tokenURI string,
+) xnft.BaseNFT {
+	return xnft.NewBaseNFT(
+		ID,
+		owner,
+		strings.TrimSpace(tokenURI),
+	)
 }
 
 func (bnft BaseNFT) String() string {
@@ -97,10 +63,10 @@ TokenID:		%s`,
 // TODO: create interface and types for mintable NFT
 
 // NFTs define a list of NFT
-type NFTs []BaseNFT
+type NFTs []xnft.BaseNFT
 
 // NewNFTs creates a new set of NFTs
-func NewNFTs(nfts ...BaseNFT) NFTs {
+func NewNFTs(nfts ...xnft.BaseNFT) NFTs {
 	if len(nfts) == 0 {
 		return NFTs{}
 	}
@@ -113,7 +79,7 @@ func (nfts *NFTs) Add(nftsB NFTs) {
 }
 
 // Find returns the searched collection from the set
-func (nfts NFTs) Find(id string) (nft BaseNFT, found bool) {
+func (nfts NFTs) Find(id string) (nft xnft.BaseNFT, found bool) {
 	index := nfts.find(id)
 	if index == -1 {
 		return nft, false
@@ -122,7 +88,7 @@ func (nfts NFTs) Find(id string) (nft BaseNFT, found bool) {
 }
 
 // Update removes and replaces an NFT from the set
-func (nfts NFTs) Update(id string, nft BaseNFT) (NFTs, bool) {
+func (nfts NFTs) Update(id string, nft xnft.BaseNFT) (NFTs, bool) {
 	index := nfts.find(id)
 	if index == -1 {
 		return nfts, false
@@ -182,7 +148,7 @@ func (nfts NFTs) find(id string) int {
 // Encoding
 
 // NFTJSON is the exported NFT format for clients
-type NFTJSON map[string]BaseNFT
+type NFTJSON map[string]xnft.BaseNFT
 
 // MarshalJSON for NFTs
 func (nfts NFTs) MarshalJSON() ([]byte, error) {
@@ -204,7 +170,7 @@ func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 	}
 
 	for id, nft := range nftJSON {
-		*nfts = append(*nfts, NewBaseNFT(id, nft.GetOwner(), nft.GetTokenURI(), nft.GetDescription(), nft.GetImage(), nft.GetName()))
+		*nfts = append(*nfts, NewBaseNFT(id, nft.GetOwner(), nft.GetTokenURI()))
 	}
 
 	return nil

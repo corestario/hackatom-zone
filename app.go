@@ -2,20 +2,19 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-
-	ibcKeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -24,9 +23,9 @@ import (
 	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 const appName = "nftapp"
@@ -61,17 +60,19 @@ type NFTApp struct {
 	tkeyParams       *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
 	keyIBC           *sdk.KVStoreKey
+	keySupply        *sdk.KVStoreKey
+	tkeySupply       *sdk.TransientStoreKey
 
 	// Keepers
-	accountKeeper       auth.AccountKeeper
-	bankKeeper          bank.Keeper
-	stakingKeeper       staking.Keeper
-	slashingKeeper      slashing.Keeper
-	distrKeeper         distr.Keeper
-	feeCollectionKeeper auth.FeeCollectionKeeper
-	paramsKeeper        params.Keeper
-	nftKeeper           nftapp.Keeper
-	ibcKeeper           ibc.Keeper
+	accountKeeper  auth.AccountKeeper
+	bankKeeper     bank.Keeper
+	stakingKeeper  staking.Keeper
+	slashingKeeper slashing.Keeper
+	distrKeeper    distr.Keeper
+	paramsKeeper   params.Keeper
+	nftKeeper      nftapp.Keeper
+	ibcKeeper      ibc.Keeper
+	supplyKeeper   supply.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -89,18 +90,18 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		BaseApp: bApp,
 		cdc:     cdc,
 
-		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
-		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
-		keyFeeCollection: sdk.NewKVStoreKey(auth.FeeStoreKey),
-		keyStaking:       sdk.NewKVStoreKey(staking.StoreKey),
-		tkeyStaking:      sdk.NewTransientStoreKey(staking.TStoreKey),
-		keyDistr:         sdk.NewKVStoreKey(distr.StoreKey),
-		tkeyDistr:        sdk.NewTransientStoreKey(distr.TStoreKey),
-		keyNFT:           sdk.NewKVStoreKey(nftapp.StoreKey),
-		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
-		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
-		keySlashing:      sdk.NewKVStoreKey(slashing.StoreKey),
-		keyIBC:           sdk.NewKVStoreKey("ibc"),
+		keyMain:     sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount:  sdk.NewKVStoreKey(auth.StoreKey),
+		keyStaking:  sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStaking: sdk.NewTransientStoreKey(staking.TStoreKey),
+		keyDistr:    sdk.NewKVStoreKey(distr.StoreKey),
+		keyNFT:      sdk.NewKVStoreKey(nftapp.StoreKey),
+		keyParams:   sdk.NewKVStoreKey(params.StoreKey),
+		tkeyParams:  sdk.NewTransientStoreKey(params.TStoreKey),
+		keySlashing: sdk.NewKVStoreKey(slashing.StoreKey),
+		keyIBC:      sdk.NewKVStoreKey("ibc"),
+		keySupply:   sdk.NewKVStoreKey(supply.StoreKey),
+		tkeySupply:  sdk.NewTransientStoreKey("transient_params_supply"),
 	}
 
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams, params.DefaultCodespace)
@@ -124,17 +125,17 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		app.accountKeeper,
 		bankSubspace,
 		bank.DefaultCodespace,
+		nil,
 	)
 
-	// The FeeCollectionKeeper collects transaction fees and renders them to the fee distribution module
-	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(cdc, app.keyFeeCollection)
+	app.supplyKeeper = supply.NewKeeper(cdc, app.keySupply, app.accountKeeper, app.bankKeeper, nil)
 
 	// The staking keeper
 	stakingKeeper := staking.NewKeeper(
 		app.cdc,
 		app.keyStaking,
 		app.tkeyStaking,
-		app.bankKeeper,
+		app.supplyKeeper,
 		stakingSubspace,
 		staking.DefaultCodespace,
 	)
@@ -143,10 +144,12 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		app.cdc,
 		app.keyDistr,
 		distrSubspace,
-		app.bankKeeper,
 		&stakingKeeper,
-		app.feeCollectionKeeper,
+		app.supplyKeeper,
+		//app.feeCollectionKeeper,
 		distr.DefaultCodespace,
+		"",
+		nil,
 	)
 
 	app.slashingKeeper = slashing.NewKeeper(
@@ -171,17 +174,18 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		app.cdc,
 	)
 
-	app.ibcKeeper = ibcKeeper.NewKeeper(cdc, app.keyIBC)
+	app.ibcKeeper = ibc.NewKeeper(cdc, app.keyIBC)
 
 	app.mm = module.NewManager(
 		genaccounts.NewAppModule(app.accountKeeper),
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
-		auth.NewAppModule(app.accountKeeper, app.feeCollectionKeeper),
+		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
 		nftapp.NewAppModule(app.nftKeeper, &app.ibcKeeper, app.bankKeeper),
-		distr.NewAppModule(app.distrKeeper),
+		distr.NewAppModule(app.distrKeeper, app.supplyKeeper),
+		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
-		staking.NewAppModule(app.stakingKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
+		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
 		ibc.NewAppModule(app.ibcKeeper),
 	)
 
@@ -212,7 +216,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 	app.SetAnteHandler(
 		auth.NewAnteHandler(
 			app.accountKeeper,
-			app.feeCollectionKeeper,
+			app.supplyKeeper,
 			auth.DefaultSigVerificationGasConsumer,
 		),
 	)

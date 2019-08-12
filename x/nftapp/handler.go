@@ -2,10 +2,9 @@ package nftapp
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
-	"sync"
-
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"sync"
 
 	"github.com/dgamingfoundation/hackatom-zone/x/nftapp/types"
 
@@ -31,7 +30,7 @@ func NewHandler(keeper Keeper, ibcKeeper *ibc.Keeper) sdk.Handler {
 // Handle a message to create nft
 func handleMsgCreateNFT(ctx sdk.Context, keeper Keeper, msg types.MsgCreateNFT) sdk.Result {
 	id := uuid.NewV4()
-	nft := types.NewBaseNFT(id.String(), msg.Owner, msg.Name, msg.Description, msg.Image, msg.TokenURI)
+	nft := types.NewBaseNFT(id.String(), msg.Owner, msg.TokenURI)
 	keeper.CreateNFT(ctx, nft)
 	return sdk.Result{}
 }
@@ -52,35 +51,10 @@ func handleMsgTransferTokenToHub(
 
 	var result sdk.Result
 	once.Do(func() {
-		err = ibcKeeper.CreateClient(ctx, types.ClientID, tendermint.ConsensusState{
-			ChainID: "NFTChain",
-		})
-		if err != nil {
-			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
-			return
-		}
 
-		err = ibcKeeper.OpenConnection(ctx, types.ConnectionID, types.CounterpartyID, types.ClientID, types.CounterpartyClientID)
-		if err != nil {
-			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
-			return
-		}
-
-		err = ibcKeeper.OpenChannel(ctx, types.ZoneModule, types.ConnectionID, types.ChannelID, types.CounterpartyID, types.HubModule)
-		if err != nil {
-			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
-			return
-		}
-
-		_, err := ibcKeeper.QueryConnection(ctx, types.ConnectionID)
-		if err != nil {
-			result = sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
-			return
-		}
-
-		obj := ibcKeeper.Channel.Object(types.ConnectionID, types.ChannelID)
-		fmt.Println("Is Empty:", obj.Packets.IsEmpty(ctx))
-		fmt.Println("Seqsend", obj.Seqsend.Get(ctx))
+		obj := ibcKeeper.Channel().CLIObject(merkle.NewPath(nil, nil), types.ConnectionID, types.ChannelID, types.ClientID)
+		fmt.Println("Is Empty:", obj)
+		//fmt.Println("Seqsend", obj.SeqSend(ctx))
 
 	})
 
@@ -89,14 +63,14 @@ func handleMsgTransferTokenToHub(
 	}
 
 	packet := types.NewSellTokenPacket(token, msg.Price)
-	if err := ibcKeeper.Send(ctx, types.ConnectionID, types.ChannelID, packet); err != nil {
+	if err := ibcKeeper.Channel().Send(ctx, types.ConnectionID, types.ChannelID, packet); err != nil {
 		fmt.Println(">>>", err)
 		return sdk.Result{Code: sdk.CodeUnknownRequest, Log: err.Error()}
 	}
 
-	obj := ibcKeeper.Channel.Object(types.ConnectionID, types.ChannelID)
-	fmt.Println("Is Empty:", obj.Packets.IsEmpty(ctx))
-	fmt.Println("Seqsend", obj.Seqsend.Get(ctx))
+	//obj := ibcKeeper.Channel().CLIObject(types.ConnectionID, types.ChannelID)
+	//fmt.Println("Is Empty:", obj.)
+	//fmt.Println("Seqsend", obj.Seqsend.Get(ctx))
 
 	if err := keeper.DeleteNFT(ctx, msg.Owner, msg.TokenID); err != nil {
 		return sdk.ErrUnauthorized(fmt.Sprintf("failed to delete token: %v", err.Error())).Result()

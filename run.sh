@@ -21,7 +21,7 @@ actor barely wait patrol moral amateur hole clerk misery truly salad wonder arte
 "
 
 nftd add-genesis-account $(nftcli keys show validator1 -a) 1000token,100000000stake
-nftd add-genesis-account $(nftcli keys show alice -a) 1000token
+nftd add-genesis-account $(nftcli keys show alice -a) 1000token,100000000stake
 
 echo "Configuring..."
 nftcli config chain-id NFTChain
@@ -29,7 +29,10 @@ nftcli config output json
 nftcli config indent true
 nftcli config trust-node true
 
-nftd gentx --name validator1 <<< "12345678"
+mkdir ~/.nftd/config/gentx
+
+nftd gentx --name validator1 --output-document ~/.nftd/config/gentx/validator1.json <<< "12345678"
+nftd gentx --name alice --output-document ~/.nftd/config/gentx/alice.json <<< "12345678"
 nftd collect-gentxs
 nftd validate-genesis
 
