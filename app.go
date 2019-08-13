@@ -2,6 +2,8 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	"os"
 
@@ -95,6 +97,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		keyStaking:  sdk.NewKVStoreKey(staking.StoreKey),
 		tkeyStaking: sdk.NewTransientStoreKey(staking.TStoreKey),
 		keyDistr:    sdk.NewKVStoreKey(distr.StoreKey),
+		tkeyDistr:   sdk.NewTransientStoreKey("transient_" + distr.ModuleName),
 		keyNFT:      sdk.NewKVStoreKey(nftapp.StoreKey),
 		keyParams:   sdk.NewKVStoreKey(params.StoreKey),
 		tkeyParams:  sdk.NewTransientStoreKey(params.TStoreKey),
@@ -128,7 +131,16 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		nil,
 	)
 
-	app.supplyKeeper = supply.NewKeeper(cdc, app.keySupply, app.accountKeeper, app.bankKeeper, nil)
+	maccPerms := map[string][]string{
+		auth.FeeCollectorName:     nil,
+		distr.ModuleName:          nil,
+		mint.ModuleName:           {supply.Minter},
+		staking.BondedPoolName:    {supply.Burner, supply.Staking},
+		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+		gov.ModuleName:            {supply.Burner},
+	}
+
+	app.supplyKeeper = supply.NewKeeper(cdc, app.keySupply, app.accountKeeper, app.bankKeeper, maccPerms)
 
 	// The staking keeper
 	stakingKeeper := staking.NewKeeper(
@@ -202,6 +214,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		slashing.ModuleName,
 		types.ModuleName,
 		genutil.ModuleName,
+		supply.ModuleName,
 		"ibc",
 	)
 
@@ -224,7 +237,6 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 	app.MountStores(
 		app.keyMain,
 		app.keyAccount,
-		app.keyFeeCollection,
 		app.keyStaking,
 		app.tkeyStaking,
 		app.keyDistr,
@@ -233,6 +245,7 @@ func NewNFTApp(logger log.Logger, db dbm.DB) *NFTApp {
 		app.keyNFT,
 		app.keyParams,
 		app.tkeyParams,
+		app.keySupply,
 		app.keyIBC,
 	)
 
